@@ -6,6 +6,7 @@ import pandas as pd
 
 logging.basicConfig(level=logging.INFO)
 
+
 def ingest_data(source_path: str) -> pd.DataFrame | None:
     """Ingests data from a source file path into a DataFrame."""
     if not os.path.exists(source_path):
@@ -21,8 +22,10 @@ def ingest_data(source_path: str) -> pd.DataFrame | None:
         logging.error(f"Failed to ingest data: {e}")
         return None
 
+
 if __name__ == "__main__":
     # Adjusted path to point directly to the project root file
     df = ingest_data("transactions.csv")
     if df is not None:
-        print(df.head())  # Preview the ingested data
+        print("Ingestion complete, previewing data:")
+        print(df.head())
