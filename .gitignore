@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*.log
+
+# Environment
+.venv/
+.env
+
+# OS & IDE
+.DS_Store
+.vscode/
+
+# Data & artifacts
+*.csv
+*.json
+*.sqlite3
+logs/
+dvc/.cache/
