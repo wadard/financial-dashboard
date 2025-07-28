@@ -24,9 +24,12 @@ jobs:
           pip install -r requirements.txt
           pip install pre-commit pytest
 
+<<<<<<< HEAD
       - name: Set PYTHONPATH
         run: echo "PYTHONPATH=${{ github.workspace }}" >> $GITHUB_ENV  
 
+=======
+>>>>>>> feature/data-ingestion
       - name: Run pre-commit checks
         run: |
           pre-commit run --all-files

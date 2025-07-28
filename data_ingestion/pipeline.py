@@ -1,4 +1,4 @@
-# data_ingestion/data_pipeline.py
+# data_ingestion/pipeline.py
 
 import logging
 import os
