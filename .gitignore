@@ -12,6 +12,9 @@ __pycache__/
 .vscode/
 
 # Data & artifacts
+!data/transactions.csv
+!data/transactions.parquet
+!data/transactions.json
 *.csv
 *.json
 *.sqlite3
