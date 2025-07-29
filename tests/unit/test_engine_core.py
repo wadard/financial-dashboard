@@ -3,6 +3,7 @@ import unittest
 import pandas as pd
 
 from analytics_engine.core import AnalyticsEngine
+from analytics_engine.result import AnalyticsResult
 
 
 class TestAnalyticsEngine(unittest.TestCase):
@@ -40,5 +41,9 @@ class TestAnalyticsEngine(unittest.TestCase):
 
     def test_combined_analytics(self):
         results = self.engine.run_all_analytics()
-        self.assertIn("Metrics", results)
-        self.assertIn("KPIs", results)
+
+        self.assertIsInstance(results, AnalyticsResult)
+        self.assertIn("Total Revenue", results.metrics)
+        self.assertIn("Unique Users", results.kpis)
+        self.assertGreater(results.metrics["Total Revenue"], 0)
+        self.assertGreaterEqual(results.kpis["Unique Users"], 1)
