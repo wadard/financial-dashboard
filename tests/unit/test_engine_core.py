@@ -21,7 +21,6 @@ class TestAnalyticsEngine(unittest.TestCase):
                 ],
             }
         )
-
         self.engine = AnalyticsEngine(self.df)
 
     def test_metrics_output(self):
@@ -40,5 +39,22 @@ class TestAnalyticsEngine(unittest.TestCase):
 
     def test_combined_analytics(self):
         results = self.engine.run_all_analytics()
-        self.assertIn("Metrics", results)
-        self.assertIn("KPIs", results)
+        self.assertTrue(hasattr(results, "metrics"))
+        expected_metrics_keys = [
+            "Total Revenue",
+            "Total Fees",
+            "Average Transaction",
+            "Volume per User",
+        ]
+        for key in expected_metrics_keys:
+            self.assertIn(key, results.metrics)
+
+        self.assertTrue(hasattr(results, "kpis"))
+        expected_kpi_keys = [
+            "Failure Rate",
+            "Completion Rate",
+            "Unique Users",
+            "Transactions Per Day",
+        ]
+        for key in expected_kpi_keys:
+            self.assertIn(key, results.kpis)
