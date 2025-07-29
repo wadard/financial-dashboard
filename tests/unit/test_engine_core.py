@@ -8,6 +8,7 @@ from analytics_engine.result import AnalyticsResult
 
 class TestAnalyticsEngine(unittest.TestCase):
     def setUp(self):
+        # Create mock DataFrame with proper schema
         self.df = pd.DataFrame(
             {
                 "transaction_id": ["T001", "T002", "T003"],
@@ -22,6 +23,9 @@ class TestAnalyticsEngine(unittest.TestCase):
                 ],
             }
         )
+
+        # ✅ Normalize a 'date' column expected by KPI logic
+        self.df["date"] = pd.to_datetime(self.df["timestamp"]).dt.date
 
         self.engine = AnalyticsEngine(self.df)
 
@@ -41,7 +45,6 @@ class TestAnalyticsEngine(unittest.TestCase):
 
     def test_combined_analytics(self):
         results = self.engine.run_all_analytics()
-
         self.assertIsInstance(results, AnalyticsResult)
         self.assertIn("Total Revenue", results.metrics)
         self.assertIn("Unique Users", results.kpis)

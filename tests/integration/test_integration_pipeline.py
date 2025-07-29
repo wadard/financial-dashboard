@@ -26,7 +26,10 @@ class TestIntegrationPipeline(unittest.TestCase):
             }
         )
 
-        # Instantiate the full analytics engine with simulated ingestion
+        # ✅ Normalize timestamp into 'date' for KPI functions expecting it
+        self.df["date"] = pd.to_datetime(self.df["timestamp"]).dt.date
+
+        # Instantiate the full analytics engine with schema-normalized DataFrame
         self.engine = AnalyticsEngine(self.df)
 
     def test_run_all_analytics_returns_result_object(self):

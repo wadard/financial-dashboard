@@ -78,6 +78,18 @@ class DataPipeline:
                 self.df["status"] = self.df["status"].str.strip().str.lower()
                 self.df.drop_duplicates(inplace=True)
 
+                date_col = next(
+                    (
+                        col
+                        for col in self.df.columns
+                        if "time" in col.lower() or "date" in col.lower()
+                    ),
+                    None,
+                )
+                if date_col:
+                    self.df.rename(columns={date_col: "date"}, inplace=True)
+                    self.df["date"] = pd.to_datetime(self.df["date"], errors="coerce")
+
             elif self.engine == "polars":
                 import polars as pl
 
@@ -91,14 +103,32 @@ class DataPipeline:
                 )
                 self.df = self.df.unique()
 
+                for col in self.df.columns:
+                    if "time" in col.lower() or "date" in col.lower():
+                        self.df = self.df.rename({col: "date"})
+                        self.df = self.df.with_columns(
+                            [
+                                pl.col("date").str.strptime(
+                                    pl.Datetime, "%Y-%m-%d %H:%M:%S", strict=False
+                                )
+                            ]
+                        )
+                        break
+
             elif self.engine == "spark":
-                from pyspark.sql.functions import col, lower, trim
+                from pyspark.sql.functions import col, lower, to_timestamp, trim
 
                 self.df = self.df.dropna(subset=["amount", "user_id"])
                 self.df = self.df.withColumn("amount", col("amount").cast("double"))
                 self.df = self.df.withColumn("fee", col("fee").cast("double"))
                 self.df = self.df.withColumn("status", lower(trim(col("status"))))
                 self.df = self.df.dropDuplicates()
+
+                for colname in self.df.columns:
+                    if "time" in colname.lower() or "date" in colname.lower():
+                        self.df = self.df.withColumnRenamed(colname, "date")
+                        self.df = self.df.withColumn("date", to_timestamp("date"))
+                        break
 
         except Exception as e:
             logging.error(f"Failed to clean data: {e}")
@@ -146,16 +176,41 @@ class DataPipeline:
             logging.error(f"Failed to transform data: {e}")
             return None
 
+    def get_user_ids(self):
+        if self.df is None:
+            logging.warning("No data loaded to extract user IDs.")
+            return []
+        try:
+            if self.engine == "pandas":
+                return sorted(self.df["user_id"].dropna().unique().tolist())
+            elif self.engine == "polars":
+                return sorted(self.df["user_id"].drop_nulls().unique().to_list())
+            elif self.engine == "spark":
+                return sorted(
+                    [
+                        row["user_id"]
+                        for row in self.df.select("user_id").distinct().collect()
+                    ]
+                )
+        except Exception as e:
+            logging.error(f"Failed to extract user IDs: {e}")
+            return []
+
+    def get_data(self):
+        if self.df is None:
+            logging.warning("No data available to return.")
+            return None
+        return self.df
+
     def preview(self, df=None):
         df_to_show = df if df is not None else self.df
         if df_to_show is None:
             logging.warning("No data to preview.")
             return
-
         try:
             print(df_to_show.head())
         except AttributeError:
-            df_to_show.show()  # Spark fallback
+            df_to_show.show()
 
     def run_pipeline(self):
         self.ingest()
@@ -170,3 +225,6 @@ if __name__ == "__main__":
     summary = pipeline.transform()
     logging.info("Final Summary Preview:")
     pipeline.preview(summary)
+
+    logging.info("User IDs for Dropdown:")
+    print(pipeline.get_user_ids())
