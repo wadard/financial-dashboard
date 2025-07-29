@@ -157,6 +157,11 @@ class DataPipeline:
         except AttributeError:
             df_to_show.show()  # Spark fallback
 
+    def run_pipeline(self):
+        self.ingest()
+        self.clean()
+        return self.df
+
 
 if __name__ == "__main__":
     pipeline = DataPipeline("transactions.csv", engine="pandas")
