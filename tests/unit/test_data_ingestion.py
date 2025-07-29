@@ -1,4 +1,5 @@
 import os
+import sys
 import tempfile
 import unittest
 
@@ -8,15 +9,22 @@ try:
     import polars as pl
 
     HAS_POLARS = True
-except ImportError:
+except ImportError as e:
+    print(f"[DEBUG] Polars import failed: {e}")
     HAS_POLARS = False
 
 try:
     from pyspark.sql import SparkSession
 
     HAS_SPARK = True
-except ImportError:
+except ImportError as e:
+    print(f"[DEBUG] PySpark import failed: {e}")
     HAS_SPARK = False
+
+if __name__ == "__main__":
+    sys.path.insert(
+        0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
+    )
 
 from data_ingestion.pipeline import DataPipeline
 
@@ -125,7 +133,7 @@ class TestPolarsPipeline(BasePipelineTest):
         pipeline = DataPipeline("dummy", engine="polars")
         pipeline.df = df
         result = pipeline.transform()
-        self.assertTrue("user_id" in result.columns)
+        self.assertIn("user_id", result.columns)
         self.assertGreaterEqual(result.shape[0], 1)
 
 
@@ -145,7 +153,7 @@ class TestSparkPipeline(BasePipelineTest):
         pipeline = DataPipeline("dummy", engine="spark")
         pipeline.df = df
         cleaned = pipeline.clean()
-        self.assertTrue(cleaned.count() >= 1)
+        self.assertGreaterEqual(cleaned.count(), 1)
 
     def test_transform_spark(self):
         spark = SparkSession.builder.master("local[*]").getOrCreate()
@@ -162,4 +170,4 @@ class TestSparkPipeline(BasePipelineTest):
         pipeline = DataPipeline("dummy", engine="spark")
         pipeline.df = df
         result = pipeline.transform()
-        self.assertTrue(result.count() == 1)
+        self.assertEqual(result.count(), 1)

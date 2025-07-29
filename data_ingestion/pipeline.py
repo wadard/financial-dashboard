@@ -1,5 +1,3 @@
-# data_ingestion/pipeline.py
-
 import logging
 import os
 
@@ -130,10 +128,8 @@ class DataPipeline:
                     [(pl.col("amount") - pl.col("fee")).alias("net_amount")]
                 )
                 self.df = self.df.filter(pl.col("status") == "completed")
-                return (
-                    self.df.groupby("user_id")
-                    .agg(pl.sum("net_amount"))
-                    .rename({"net_amount_sum": "net_amount"})
+                return self.df.group_by("user_id").agg(
+                    [pl.sum("net_amount").alias("net_amount")]
                 )
 
             elif self.engine == "spark":
